@@ -21,6 +21,7 @@ class PatientController extends Controller
             $status = $request['status'];
             $sort = $request['sort'];
             $order = $request['order'];
+
             $validOrders = ['asc', 'desc'];
             $validSort = ['tanggal_masuk', 'tanggal_keluar', 'address'];
 
@@ -80,7 +81,7 @@ class PatientController extends Controller
                 'name' => 'required',
                 'phone' => 'required',
                 'address' => 'required',
-                'status' => 'required',
+                'status' => 'required|in:positif,sembuh,meninggal',
                 'in_date_at' => 'nullable|date',
                 'out_date_at' => 'nullable|date',
             ]);
@@ -165,6 +166,16 @@ class PatientController extends Controller
                 return response()->json(['message' => "Patient's data with id $id is not found"], 404);
             }
 
+            // Validate fields
+            $request->validate([
+                'name' => 'nullable',
+                'phone' => 'nullable',
+                'address' => 'nullable',
+                'status' => 'nullable|in:positif,sembuh,meninggal',
+                'in_date_at' => 'nullable|date',
+                'out_date_at' => 'nullable|date',
+            ]);
+
             $patient->update([
                 'name' => $request->name ?? $patient->name,
                 'phone' => $request->phone ?? $patient->phone,
@@ -183,15 +194,15 @@ class PatientController extends Controller
 
             return response()->json($result, 200);
         } catch (\Exception $err) {
-            // Handle error
+            // Handle validation error
             $errorMessage = $err->getMessage();
 
             $errorResponse = [
-                'message' => 'Error occurred',
+                'message' => 'Validation Error',
                 'errors' => $errorMessage,
             ];
 
-            return response()->json($errorResponse, 500);
+            return response()->json($errorResponse, 422);
         }
     }
 
